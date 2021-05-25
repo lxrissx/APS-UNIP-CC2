@@ -11,7 +11,7 @@ public class Lixeira
 		if(tipo == 4) metal++;
 		
 		total = plastico + papel + vidro + metal;
-		if(total == 4)  return true;
+		if(total == 8) return true;
 		else return false;
 	}
 	

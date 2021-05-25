@@ -14,7 +14,7 @@ import com.badlogic.gdx.math.Vector3;
 public class Jogo implements Screen{
 	
 	final ApsJogo2D game;
-	private BitmapFont font;
+	private BitmapFont font, fontTempo;
 	private Lixeira contarPontuacao;
 	private Personagem dadosPersonagem;
 	public float larguraQuad, alturaQuad, tamanhoPadrao, posicaoPontosY, posicaoPontosX;
@@ -23,31 +23,32 @@ public class Jogo implements Screen{
 	private ArrayList<Lixo> dadosLixo = new ArrayList<>();
 	private Texture fundo, moldura, popup, txtrPause, lixeiras, btnMenu, btnSair, btnVoltar;
 	private Texture texturePersonagem, textureZumbi[], textureLixo[], texturePredio[] = new Texture[15];
-	private int i, qntsZumbis = 4, qntsLixos = 8, contadorLixos = 0;
+	private int i, qntsZumbis = 4, qntsLixos = 8, contadorLixos = 0, contTempo=1, min=2, sec=1;
 	private float heightLixeiras, widthFundo, heightFundo, widthMoldura, heightMoldura, widthLixeiras, xLixeiras, xFundo, yFundo;
-	float[] xPredios = new float[15], yPredios = new float[15]; //** passar como parametro para saber onde os personagens não podem ir
+	float[] xPredios = new float[15], yPredios = new float[15]; //** passar como parametro para saber onde os personagens nao podem ir
 	private Integer[] lixosColetados;
+	private String timer;
 	private boolean coletado, ganhou = false, perdeu = false, pausou = false, desbloqueado = false;
 	private Rectangle predioRect, lixoRect[], zumbiRect[], personagemRect, btnMenuRect, btnSairRect, btnVoltarRect, btnPauseRect;
 	
 	public Jogo(final ApsJogo2D game) {
 		this.game = game;
 		/* TAMANHO DAS IMAGENS DE BACKGROUD */
-		heightLixeiras = Gdx.graphics.getHeight() / 8; // Altura das lixeiras com proporção ao tamanho da tela
-		widthLixeiras = heightLixeiras * 4; // Largura das quatro lixeiras juntas, elas são quadradas e por isso a multiplicação
-		xLixeiras = (Gdx.graphics.getWidth() / 2) - (widthLixeiras /2); // Onde começa a imagem lixeiras
+		heightLixeiras = Gdx.graphics.getHeight() / 8; // Altura das lixeiras com proporcao ao tamanho da tela
+		widthLixeiras = heightLixeiras * 4; // Largura das quatro lixeiras juntas, elas sao quadradas e por isso a multiplicacao
+		xLixeiras = (Gdx.graphics.getWidth() / 2) - (widthLixeiras /2); // Onde comeca a imagem lixeiras
 		heightMoldura = Gdx.graphics.getHeight() - heightLixeiras; // Altura da moldura  menos o tamanho das lixeiras
-		widthMoldura = Gdx.graphics.getWidth(); // A moldura é a parte rosa
+		widthMoldura = Gdx.graphics.getWidth(); // A moldura eh a parte rosa
 		widthFundo = (float) (widthMoldura - (widthMoldura * 0.02)); // O fundo recebe a moldura menos 2% dela msm 
-		heightFundo = (float) (heightMoldura - (heightMoldura * 0.02)); // Fundo é a parte cinza
+		heightFundo = (float) (heightMoldura - (heightMoldura * 0.02)); // Fundo eh a parte cinza
 		xFundo = (widthMoldura / 2) - (widthFundo / 2); // Centralizar largura da parte cinza
 		yFundo = (heightFundo / 2) - (heightFundo / 2); // Centralizar altura da parte cinza
-		
+
 		//** DIVIDIR A TELA EM UMA MALHA 11x7 PARA DEFINIR AS COORDENADAS **\\
 		larguraQuad = widthFundo / 11; 
 		alturaQuad = heightFundo / 7;
 		
-		//Setar a pontuação nas lixeiras
+		//Setar a pontuacao nas lixeiras
 		posicaoPontosY = (alturaQuad / 2) + heightFundo;
 		posicaoPontosX = (alturaQuad / 2);
 
@@ -74,19 +75,19 @@ public class Jogo implements Screen{
 		int j = 1;
 		for(int i = 0; i < qntsLixos; i++) {
 			dadosLixo.add(new Lixo(j)); 
-			if(j < 4) j ++; // Controlar o tipo de lixo que está sendo criado
+			if(j < 4) j ++; // Controlar o tipo de lixo que estao sendo criados: papel, metal, plastico ou vidro
 			else j = 1;
 		}
 		
 		i = 0;
 		for(Predios contPredio: dadosPredios) {
 			if(i == 7) { 
-				texturePredio[i] = new Texture("predio-7-cinza.png"); // SETAR PRÉDIO CINZA QUANDO ELE ESTIVER BLOQUEADO
+				texturePredio[i] = new Texture("predio-7-cinza.png"); // SETAR PREDIO CINZA QUANDO ELE ESTIVER BLOQUEADO
 				predioRect = new Rectangle(contPredio.getX()-10, contPredio.getY()-10, larguraQuad, larguraQuad);
 			}
 			else texturePredio[i] = new Texture(contPredio.getImagem());
 
-			xPredios[i] = contPredio.getX(); // GUARDAR X E Y PARA PASSAR PARA O MÉTODO PERSONAGEM
+			xPredios[i] = contPredio.getX(); // GUARDAR X E Y PARA PASSAR PARA O METODO MOVER PERSONAGEM
 			yPredios[i] = contPredio.getY();
 			i++;
 		}
@@ -108,13 +109,17 @@ public class Jogo implements Screen{
 		btnMenu = new Texture("pop-btn-menu.png");
 		btnSair = new Texture("pop-btn-sair.png");
 		btnVoltar = new Texture("pop-btn-voltar.png");
-		//FIM DA CRIAÇÃO DOS OBJETOS, OS TEXTURES E OS RECTANGLES
+		//FIM DA CRIACAO DOS OBJETOS, OS TEXTURES E OS RECTANGLES
 		
 		game.camera.setToOrtho(false);
         
         contarPontuacao = new Lixeira();
         font = new BitmapFont();
+        fontTempo = new BitmapFont();
         font.setColor(0, 0, 0, 1);
+        fontTempo.setColor(0, 0, 200, 1);
+        font.getData().setScale(1.2f);
+        fontTempo.getData().setScale(1.5f);
         
         btnPauseRect = new Rectangle(0, heightMoldura + 10, this.getTamanhoPadrao(), this.getTamanhoPadrao());
 	}
@@ -132,11 +137,12 @@ public class Jogo implements Screen{
 	        Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
 			game.camera.unproject(touch);
 			if(btnPauseRect.contains(touch.x, touch.y)){
-				this.pause();
+				this.pausar();
+				game.pause();
 		    }	
 		}
 		
-		//MOVER PERSONAGEM PRINCIPAL PASSANDO PARÂMETROS: Direção, DeltaTime, Array das coordenadas dos prédios
+		//MOVER PERSONAGEM PRINCIPAL PASSANDO PARAMETROS: Direcao, DeltaTime, Array das coordenadas dos predios
 		if(!perdeu) {
 			if(Gdx.input.isKeyPressed(Input.Keys.LEFT)) dadosPersonagem.mover(1, Gdx.graphics.getDeltaTime(), xPredios, yPredios, xFundo, widthFundo, yFundo, heightFundo);
 			if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)) dadosPersonagem.mover(2, Gdx.graphics.getDeltaTime(), xPredios, yPredios, xFundo, widthFundo, yFundo, heightFundo);
@@ -166,7 +172,7 @@ public class Jogo implements Screen{
 			i++;
 		}
 		
-		//VIRAR IMAGEM DA PERSONAGEM CASO ELA VÁ PARA A ESQUERDA
+		//VIRAR IMAGEM DA PERSONAGEM CASO ELA VA PARA A ESQUERDA
         if(dadosPersonagem.getFilp()) spritePersonagem.flip(true, false);
         else spritePersonagem.flip(false, false);
         
@@ -180,8 +186,9 @@ public class Jogo implements Screen{
 			else spriteZumbi[i].flip(false, false);
 			i++;
 		}
-		//FIM DA CRIAÇÃO DOS TEXTURE E SPRITES PARA A PERSONAGEM E OS ZUMBIS
+		//FIM DA CRIACAO DOS TEXTURE E SPRITES PARA A PERSONAGEM E OS ZUMBIS
 		
+		timer = this.tempo();
 		game.camera.update();
 		game.batch.setProjectionMatrix(game.camera.combined);
 		game.batch.begin();
@@ -190,6 +197,7 @@ public class Jogo implements Screen{
 		game.batch.draw(fundo, xFundo, yFundo, widthFundo, heightFundo);
 		game.batch.draw(lixeiras, xLixeiras, heightMoldura, widthLixeiras, heightLixeiras);
 		game.batch.draw(txtrPause, 0, heightMoldura + 10, this.getTamanhoPadrao(), this.getTamanhoPadrao());
+		fontTempo.draw(game.batch, "Tempo: "+ timer, (float)(Gdx.graphics.getWidth()-200), heightMoldura + (heightLixeiras / 2));
 		
 		i = 0;
 		for(Lixo contLixo: dadosLixo) {
@@ -199,7 +207,7 @@ public class Jogo implements Screen{
 			}
 			if(!coletado) {
 				game.batch.draw(textureLixo[i], contLixo.getX(), contLixo.getY(), contLixo.getTamanho(), contLixo.getTamanho());
-				lixoRect[i].setPosition(contLixo.getX(), contLixo.getY()); //** atualizar posição do rectangle
+				lixoRect[i].setPosition(contLixo.getX(), contLixo.getY()); //** atualizar posiÃ§Ã£o do rectangle
 			}
 			i++;
 		}
@@ -237,24 +245,24 @@ public class Jogo implements Screen{
 		        Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
 				game.camera.unproject(touch);
 				if(btnVoltarRect.contains(touch.x, touch.y)){
-					//game.setScreen(new Jogo(game));
-			    }	
-				if(btnMenuRect.contains(touch.x, touch.y)){
-					game.setScreen(new Menu(game));
-					try {
-						dispose();
-					} catch (Exception e) {
-						System.out.println(e);
-					}
-			    }	
-				if(btnSairRect.contains(touch.x, touch.y)){
-					try {
-						this.dispose();
-						game.dispose();
-					} catch (Exception e) {
-						System.out.println(e);
-					}
-			    }	
+					/*
+					 * Não estamos conseguindo atualizar a tela depois de fechar o popup
+					 */
+					btnSair.dispose();
+					btnMenu.dispose();
+					btnVoltar.dispose();
+					popup.dispose();
+					pausou = false;
+					resume();
+				}	
+				if(btnMenuRect.contains(touch.x, touch.y)){ 
+					game.setScreen(new Menu(game)); 
+					this.dispose();
+				}	
+				if(btnSairRect.contains(touch.x, touch.y)){ 
+					this.dispose();
+					System.exit(0); 
+				}	
 			}
 		}
 		game.batch.end();
@@ -262,7 +270,25 @@ public class Jogo implements Screen{
 	}
 	
 	public float getTamanhoPadrao() {return  alturaQuad - alturaQuad / 5;}
-	public void tempo() { }
+	public String tempo() { 
+		contTempo -= 1;
+		if (sec == 0 && min == 0 ) {
+	    	this.perdeu(1);
+	    	game.pause();
+	    }
+		else {
+			if (contTempo == 0) {
+				sec -= 1;
+				contTempo = 60;
+			    if (sec == 0 && min!=0) {
+			    	sec = 59;
+			    	min -= 1;
+			    }
+			}
+		}
+		String tempo = Integer.toString(min)+":"+Integer.toString(sec);
+		return tempo;
+	}
 	public void ganhou() { 
 		game.pause();
 		popup = new Texture("pop-ganhou.png");
@@ -270,14 +296,12 @@ public class Jogo implements Screen{
 		ganhou = true;
 	}
 	public void perdeu(int acertou) { 
-		System.out.println("Você acertou o zumbi " + acertou);
+		game.pause();
 		zumbiRect[acertou].set(0, heightLixeiras, 1, 1);
 		personagemRect.set(500, heightLixeiras, 1, 1);
 		perdeu = true;
 		popup = new Texture("pop-perdeu.png");
 		btnVoltar = new Texture("pop-btn-reiniciar.png");
-		game.pause();
-		
 	}
 	public void coletarLixo(int i) {
 		int tipo = 0;
@@ -293,10 +317,14 @@ public class Jogo implements Screen{
 		
 		contadorLixos++;
 	}
-	public void pause() {
+	public void pausar() {
+		game.pause();
 		popup = new Texture("pop-pause.png");
 		pausou = true;
-		game.pause();
+	}
+	@Override
+	public void pause() {
+		
 	}
 	public void desbloquearPredio() {
 		texturePredio[7] = new Texture("predio-7.png");
@@ -317,6 +345,7 @@ public class Jogo implements Screen{
 		for(i = 0; i < texturePredio.length; i++) texturePredio[i].dispose();
 		for(i = 0; i < textureZumbi.length; i++) textureZumbi[i].dispose(); 
 		for(i = 0; i < textureLixo.length; i++) textureLixo[i].dispose();
+		Gdx.app.exit();
 	}
 
 	@Override

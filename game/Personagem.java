@@ -1,7 +1,6 @@
 package br.com.apsjogo2d.game;
 
-public class Personagem 
-{
+public class Personagem {
 	private float x, y;
 	private String imagem;
 	private int frame = 1, direcao, framePerdeu = 1;

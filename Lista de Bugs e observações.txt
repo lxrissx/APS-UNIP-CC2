@@ -1,0 +1,13 @@
+Lista de bugs:
+
+Caso volte para o menu inicial e tente jogar novamente os itens ficarão com erro de posição.
+
+
+O botão pause abre um pop-up, porém não está pausando o jogo.
+
+Se tentar 'pausar' o jogo e voltar a jogar, um quardrado preto vai ficar na tela.
+
+**********************************************************************************************
+Observações: 
+
+Na pasta Game estão as classes do jogo e na desktop está a classe main. 
